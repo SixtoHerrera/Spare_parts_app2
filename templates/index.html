@@ -3,54 +3,77 @@
 <head>
     <title>Spare Parts Manager</title>
 </head>
+
 <body>
+<h2>Login</h2>
+<input id="username" placeholder="Enter your name">
+<button onclick="login()">Login</button>
 
-    <h1>Spare Parts Manager</h1>
+<p id="currentUser"></p>
+<hr>
 
-    <h2>Add New Part</h2>
+<h1>Spare Parts Manager</h1>
 
-    <input id="part_number" placeholder="Part Number"><br><br>
-    <input id="description" placeholder="Description"><br><br>
-    <input id="category" placeholder="Category"><br><br>
-    <input id="location" placeholder="Location"><br><br>
-    <input id="min_stock" type="number" placeholder="Min Stock"><br><br>
-    <input id="max_stock" type="number" placeholder="Max Stock"><br><br>
-    <input id="current_stock" type="number" placeholder="Current Stock"><br><br>
+<!-- ================= USER ================= -->
+<h3>User</h3>
+<input id="username" placeholder="Enter your name">
+<br><br>
 
-    <button onclick="addPart()">Add Part</button>
+<!-- ================= ADD PART ================= -->
+<h2>Add New Part</h2>
 
-    <h2>Parts List</h2>
-    <button onclick="loadParts()">Refresh List</button>
+<input id="part_number" placeholder="Part Number"><br><br>
+<input id="description" placeholder="Description"><br><br>
+<input id="category" placeholder="Category"><br><br>
+<input id="location" placeholder="Location"><br><br>
+<input id="min_stock" type="number" placeholder="Min Stock"><br><br>
+<input id="max_stock" type="number" placeholder="Max Stock"><br><br>
+<input id="current_stock" type="number" placeholder="Current Stock"><br><br>
 
-    <ul id="partsList"></ul>
-    <h2>Transaction History</h2>
+<button onclick="addPart()">Add Part</button>
+
+<hr>
+
+<!-- ================= PARTS LIST ================= -->
+<h2>Parts List</h2>
+<button onclick="loadParts()">Refresh List</button>
+
+<ul id="partsList"></ul>
+
+<hr>
+
+<!-- ================= TRANSACTIONS ================= -->
+<h2>Transaction History</h2>
 <button onclick="loadTransactions()">Load History</button>
 
 <ul id="transactionList"></ul>
 
-    <script>
-        function addPart() {
-            fetch("/parts", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    part_number: document.getElementById("part_number").value,
-                    description: document.getElementById("description").value,
-                    category: document.getElementById("category").value,
-                    location: document.getElementById("location").value,
-                    min_stock: parseInt(document.getElementById("min_stock").value),
-                    max_stock: parseInt(document.getElementById("max_stock").value),
-                    current_stock: parseInt(document.getElementById("current_stock").value)
-                })
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message);
-                loadParts();
-            });
-        }
+<!-- ================= JAVASCRIPT ================= -->
+<script>
 
-        function loadParts() {
+function addPart() {
+    fetch("/parts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            part_number: document.getElementById("part_number").value,
+            description: document.getElementById("description").value,
+            category: document.getElementById("category").value,
+            location: document.getElementById("location").value,
+            min_stock: parseInt(document.getElementById("min_stock").value),
+            max_stock: parseInt(document.getElementById("max_stock").value),
+            current_stock: parseInt(document.getElementById("current_stock").value)
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        loadParts();
+    });
+}
+
+
+function loadParts() {
     fetch("/parts")
     .then(res => res.json())
     .then(data => {
@@ -62,11 +85,8 @@
 
             let currentStock = part[7];
             let minStock = part[5];
-
-            // 🚨 Check if low stock
             let isLow = currentStock < minStock;
 
-            // Apply styling
             item.style.color = isLow ? "red" : "black";
 
             item.innerHTML = `
@@ -89,48 +109,47 @@
         });
     });
 }
+
+
 function issuePart(partId) {
     let qty = parseInt(document.getElementById(`qty-${partId}`).value);
-
     updateStock(partId, -qty);
 }
 
 function receivePart(partId) {
     let qty = parseInt(document.getElementById(`qty-${partId}`).value);
-
     updateStock(partId, qty);
 }
+
+
 function updateStock(partId, change) {
+    let user = document.getElementById("username").value || "Unknown";
+
     fetch("/update_stock", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({
             part_id: partId,
-            change: change
+            change: change,
+            user: user
         })
     })
-    .then(res => res.json())
+    .then(res => {
+        if (!res.ok) {
+            return res.json().then(err => { throw err; });
+        }
+        return res.json();
+    })
     .then(data => {
         alert(data.message);
         loadParts();
+    })
+    .catch(err => {
+        alert(err.message);
     });
 }
 
-function updateStock(partId, change) {
-    fetch("/update_stock", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            part_id: partId,
-            change: change
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        loadParts();
-    });
-}
+
 function loadTransactions() {
     fetch("/transactions")
     .then(res => res.json())
@@ -145,13 +164,32 @@ function loadTransactions() {
                 "Part: " + tx[1] +
                 " | Type: " + tx[2] +
                 " | Qty: " + tx[3] +
-                " | Date: " + tx[4];
+                " | User: " + tx[4] +
+                " | Date: " + tx[5];
 
             list.appendChild(item);
         });
     });
 }
-    </script>
+
+
+// Auto-load parts on page load
+window.onload = loadParts;
+function login() {
+    let username = document.getElementById("username").value;
+
+    fetch("/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username: username})
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        document.getElementById("currentUser").innerText = "Logged in as: " + username;
+    });
+}
+</script>
 
 </body>
 </html>

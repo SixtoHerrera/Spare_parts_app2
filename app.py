@@ -1,27 +1,28 @@
-from flask import Flask, request, jsonify, render_template
+print("APP STARTED")
+from flask import Flask, request, jsonify, render_template, session
 import sqlite3
 
-# Initialize app
 app = Flask(__name__)
+app.secret_key = "supersecretkey"
 
-# -------------------------------
-# Database connection function
-# -------------------------------
+# --------------------------------------
+# Database connection (with timeout)
+# --------------------------------------
 def get_db():
-    return sqlite3.connect("spare_parts.db")
+    return sqlite3.connect("spare_parts.db", timeout=10)
 
 
-# -------------------------------
-# HOME ROUTE (loads UI)
-# -------------------------------
+# --------------------------------------
+# HOME (UI)
+# --------------------------------------
 @app.route("/")
 def home():
     return render_template("index.html")
 
 
-# -------------------------------
+# --------------------------------------
 # GET ALL PARTS
-# -------------------------------
+# --------------------------------------
 @app.route("/parts", methods=["GET"])
 def get_parts():
     conn = get_db()
@@ -34,16 +35,15 @@ def get_parts():
     return jsonify(rows)
 
 
-# -------------------------------
+# --------------------------------------
 # ADD NEW PART
-# -------------------------------
+# --------------------------------------
 @app.route("/parts", methods=["POST"])
 def add_part():
     print("ADD PART HIT")
 
     data = request.json
 
-    # ✅ Validate incoming data
     if not data:
         return jsonify({"message": "Invalid data"}), 400
 
@@ -78,16 +78,19 @@ def add_part():
         return jsonify({"message": "Part added successfully"})
 
     except Exception as e:
-        if conn:
-            conn.close()
         return jsonify({"message": str(e)}), 500
 
+
+# --------------------------------------
+# UPDATE STOCK + TRANSACTION LOG
+# --------------------------------------
 @app.route("/update_stock", methods=["POST"])
 def update_stock():
     data = request.json
 
     part_id = data["part_id"]
     change = data["change"]
+    user = session.get("user", "UNKNOWN")
 
     conn = get_db()
     cursor = conn.cursor()
@@ -115,29 +118,31 @@ def update_stock():
         WHERE id = ?
     """, (new_stock, part_id))
 
-    # ✅ NEW: Record transaction
+    # Determine type
     transaction_type = "IN" if change > 0 else "OUT"
 
+    # Insert transaction
     cursor.execute("""
-        INSERT INTO transactions (part_id, change, type)
-        VALUES (?, ?, ?)
-    """, (part_id, abs(change), transaction_type))
+        INSERT INTO transactions (part_id, change, type, user)
+        VALUES (?, ?, ?, ?)
+    """, (part_id, abs(change), transaction_type, user))
 
     conn.commit()
     conn.close()
 
     return jsonify({"message": "Stock updated"})
-    conn.commit()
-    conn.close()
 
-    return jsonify({"message": "Part added successfully"})
+
+# --------------------------------------
+# GET TRANSACTION HISTORY
+# --------------------------------------
 @app.route("/transactions", methods=["GET"])
 def get_transactions():
     conn = get_db()
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT t.id, p.part_number, t.type, t.change, t.date
+        SELECT t.id, p.part_number, t.type, t.change, t.user, t.date
         FROM transactions t
         JOIN parts p ON t.part_id = p.id
         ORDER BY t.date DESC
@@ -147,9 +152,13 @@ def get_transactions():
     conn.close()
 
     return jsonify(rows)
-
-# -------------------------------
-# START SERVER
-# -------------------------------
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.json
+    session["user"] = data.get("username")
+    return jsonify({"message": "Logged in"})
+# --------------------------------------
+# RUN SERVER
+# --------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
