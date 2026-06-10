@@ -1,6 +1,10 @@
 import sqlite3
+from pathlib import Path
 
-conn = sqlite3.connect("spare_parts.db")
+DB_PATH = Path(r"S:\SUNDATA\Manufacturing Engineering\Maintenance\Spare parts management\spare_parts.db")
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
 cursor.execute("""
@@ -21,10 +25,17 @@ CREATE TABLE IF NOT EXISTS transactions (
     part_id INTEGER,
     change INTEGER,
     type TEXT,
+    user TEXT DEFAULT 'UNKNOWN',
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(part_id) REFERENCES parts(id)
 )
 """)
+
+cursor.execute("PRAGMA table_info(transactions)")
+columns = [column[1] for column in cursor.fetchall()]
+
+if "user" not in columns:
+    cursor.execute("ALTER TABLE transactions ADD COLUMN user TEXT DEFAULT 'UNKNOWN'")
 
 conn.commit()
 conn.close()

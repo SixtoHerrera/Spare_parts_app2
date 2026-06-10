@@ -1,15 +1,61 @@
 print("APP STARTED")
 from flask import Flask, request, jsonify, render_template, session
 import sqlite3
+from pathlib import Path
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
+
+DB_PATH = Path(r"S:\SUNDATA\Manufacturing Engineering\Maintenance\Spare parts management\spare_parts.db")
 
 # --------------------------------------
 # Database connection (with timeout)
 # --------------------------------------
 def get_db():
-    return sqlite3.connect("spare_parts.db", timeout=10)
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    return sqlite3.connect(DB_PATH, timeout=10)
+
+
+def ensure_schema():
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS parts (
+            id INTEGER PRIMARY KEY,
+            part_number TEXT,
+            description TEXT,
+            category TEXT,
+            location TEXT,
+            min_stock INTEGER,
+            max_stock INTEGER,
+            current_stock INTEGER
+        )
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS transactions (
+            id INTEGER PRIMARY KEY,
+            part_id INTEGER,
+            change INTEGER,
+            type TEXT,
+            user TEXT DEFAULT 'UNKNOWN',
+            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(part_id) REFERENCES parts(id)
+        )
+    """)
+
+    cursor.execute("PRAGMA table_info(transactions)")
+    columns = [column[1] for column in cursor.fetchall()]
+
+    if "user" not in columns:
+        cursor.execute("ALTER TABLE transactions ADD COLUMN user TEXT DEFAULT 'UNKNOWN'")
+
+    conn.commit()
+    conn.close()
+
+
+ensure_schema()
 
 
 # --------------------------------------
@@ -82,6 +128,66 @@ def add_part():
 
 
 # --------------------------------------
+# EDIT PART DETAILS
+# --------------------------------------
+@app.route("/parts/<int:part_id>", methods=["PUT"])
+def edit_part(part_id):
+    data = request.json
+
+    if not data:
+        return jsonify({"message": "Invalid data"}), 400
+
+    required_fields = [
+        "part_number",
+        "description",
+        "category",
+        "location",
+        "min_stock",
+        "max_stock",
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"message": f"Missing field: {field}"}), 400
+
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            UPDATE parts
+            SET
+                part_number = ?,
+                description = ?,
+                category = ?,
+                location = ?,
+                min_stock = ?,
+                max_stock = ?
+            WHERE id = ?
+        """, (
+            data["part_number"],
+            data["description"],
+            data["category"],
+            data["location"],
+            data["min_stock"],
+            data["max_stock"],
+            part_id
+        ))
+
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({"message": "Part not found"}), 404
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Part updated successfully"})
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
+# --------------------------------------
 # UPDATE STOCK + TRANSACTION LOG
 # --------------------------------------
 @app.route("/update_stock", methods=["POST"])
@@ -90,7 +196,7 @@ def update_stock():
 
     part_id = data["part_id"]
     change = data["change"]
-    user = session.get("user", "UNKNOWN")
+    user = session.get("user") or data.get("user") or "UNKNOWN"
 
     conn = get_db()
     cursor = conn.cursor()
@@ -155,10 +261,15 @@ def get_transactions():
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
-    session["user"] = data.get("username")
+    username = data.get("username", "").strip()
+
+    if not username:
+        return jsonify({"message": "Username is required"}), 400
+
+    session["user"] = username
     return jsonify({"message": "Logged in"})
 # --------------------------------------
 # RUN SERVER
 # --------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
