@@ -187,6 +187,32 @@ def edit_part(part_id):
         return jsonify({"message": str(e)}), 500
 
 
+@app.route("/parts/<int:part_id>", methods=["DELETE"])
+def delete_part(part_id):
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM parts WHERE id = ?", (part_id,))
+        found = cursor.fetchone()
+
+        if found is None:
+            conn.close()
+            return jsonify({"message": "Part not found"}), 404
+
+        # Remove dependent transactions first, then remove the part record.
+        cursor.execute("DELETE FROM transactions WHERE part_id = ?", (part_id,))
+        cursor.execute("DELETE FROM parts WHERE id = ?", (part_id,))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({"message": "Part deleted successfully"})
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+
 # --------------------------------------
 # UPDATE STOCK + TRANSACTION LOG
 # --------------------------------------
@@ -268,6 +294,20 @@ def login():
 
     session["user"] = username
     return jsonify({"message": "Logged in"})
+
+
+@app.route("/session_user", methods=["GET"])
+def session_user():
+    user = session.get("user")
+    return jsonify({"user": user})
+
+
+@app.route("/logout", methods=["GET", "POST"])
+def logout():
+    session.pop("user", None)
+    return jsonify({"message": "Logged out"})
+
+
 # --------------------------------------
 # RUN SERVER
 # --------------------------------------

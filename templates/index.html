@@ -2,654 +2,90 @@
 <html>
 <head>
     <title>Spare Parts Manager</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            background: #eef2f6;
-            color: #1f2933;
-            font-family: Arial, Helvetica, sans-serif;
-            line-height: 1.4;
-        }
-
-        .page {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 32px 20px 48px;
-        }
-
-        .top-bar {
-            display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        h1,
-        h2 {
-            margin: 0;
-        }
-
-        h1 {
-            font-size: 32px;
-        }
-
-        h2 {
-            margin-bottom: 18px;
-            font-size: 22px;
-        }
-
-        .subtitle {
-            margin: 6px 0 0;
-            color: #5f6c7b;
-        }
-
-        .login-panel {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            padding: 12px;
-            background: #ffffff;
-            border: 1px solid #d9e2ec;
-            border-radius: 8px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: minmax(280px, 360px) 1fr;
-            gap: 20px;
-            align-items: start;
-        }
-
-        .panel {
-            background: #ffffff;
-            border: 1px solid #d9e2ec;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-        }
-
-        .history-panel {
-            margin-top: 20px;
-        }
-
-        .form-grid {
-            display: grid;
-            gap: 12px;
-        }
-
-        label {
-            display: grid;
-            gap: 6px;
-            color: #334e68;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        input {
-            width: 100%;
-            min-height: 40px;
-            padding: 9px 11px;
-            border: 1px solid #bcccdc;
-            border-radius: 6px;
-            color: #1f2933;
-            font: inherit;
-        }
-
-        input:focus {
-            border-color: #2f80ed;
-            box-shadow: 0 0 0 3px rgba(47, 128, 237, 0.15);
-            outline: none;
-        }
-
-        button {
-            min-height: 40px;
-            padding: 9px 14px;
-            border: 0;
-            border-radius: 6px;
-            background: #1f7a5a;
-            color: #ffffff;
-            cursor: pointer;
-            font: inherit;
-            font-weight: 700;
-        }
-
-        button:hover {
-            background: #176246;
-        }
-
-        .secondary-button {
-            background: #2f80ed;
-        }
-
-        .secondary-button:hover {
-            background: #1c68c7;
-        }
-
-        .danger-button {
-            background: #c2410c;
-        }
-
-        .danger-button:hover {
-            background: #9a3412;
-        }
-
-        .light-button {
-            background: #52606d;
-        }
-
-        .light-button:hover {
-            background: #3e4c59;
-        }
-
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .parts-tools {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: flex-end;
-        }
-
-        .search-input {
-            width: 220px;
-        }
-
-        .list {
-            display: grid;
-            gap: 12px;
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }
-
-        .empty-state {
-            padding: 16px;
-            border: 1px dashed #bcccdc;
-            border-radius: 8px;
-            color: #5f6c7b;
-            background: #f8fafc;
-        }
-
-        .part-card,
-        .transaction-card {
-            padding: 14px;
-            border: 1px solid #d9e2ec;
-            border-radius: 8px;
-            background: #f8fafc;
-        }
-
-        .part-card.low-stock {
-            border-color: #d64545;
-            background: #fff5f5;
-        }
-
-        .part-title {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-
-        .part-number {
-            font-size: 17px;
-            font-weight: 800;
-        }
-
-        .badge {
-            padding: 4px 8px;
-            border-radius: 999px;
-            background: #e0f2fe;
-            color: #075985;
-            font-size: 12px;
-            font-weight: 800;
-            white-space: nowrap;
-        }
-
-        .badge.low {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .part-details,
-        .transaction-card {
-            color: #52606d;
-            font-size: 14px;
-        }
-
-        .stock-actions {
-            display: flex;
-            gap: 8px;
-            align-items: end;
-            flex-wrap: wrap;
-            margin-top: 12px;
-        }
-
-        .edit-form {
-            display: none;
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid #d9e2ec;
-        }
-
-        .edit-form.active {
-            display: grid;
-            gap: 12px;
-        }
-
-        .edit-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .button-row {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .qty-input {
-            width: 76px;
-        }
-
-        #currentUser {
-            min-height: 20px;
-            margin: 0;
-            color: #1f7a5a;
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        @media (max-width: 760px) {
-            .top-bar,
-            .grid,
-            .section-header {
-                display: grid;
-                grid-template-columns: 1fr;
-            }
-
-            .login-panel {
-                display: grid;
-            }
-
-            .parts-tools {
-                justify-content: stretch;
-            }
-
-            .search-input {
-                width: 100%;
-            }
-
-            .edit-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
-<main class="page">
-    <div class="top-bar">
-        <div>
-            <h1>Spare Parts Manager</h1>
-            <p class="subtitle">Inventory, stock movement, and transaction history</p>
-        </div>
-
-        <div class="login-panel">
+<main class="page-shell">
+    <section class="panel login-panel">
+        <h2>Login</h2>
+        <p>Set the active user before making stock changes.</p>
+        <div class="inline-actions">
             <input id="username" placeholder="Enter your name">
-            <button onclick="login()">Login</button>
-            <p id="currentUser"></p>
+            <button id="loginButton" onclick="login()">Login</button>
+            <button id="logoutButton" class="ghost hidden" onclick="logoutUser()">Logout</button>
         </div>
-    </div>
+    </section>
 
-    <div class="grid">
-        <section class="panel">
-            <h2>Add New Part</h2>
+    <section id="appContent" class="hidden">
+        <header class="hero">
+            <p class="eyebrow">Inventory Dashboard</p>
+            <h1>Spare Parts Manager</h1>
+            <p class="hero-subtitle">Track stock levels, process receiving and issuing, and monitor part activity in one place.</p>
+            <p class="current-user" id="currentUser">Not logged in</p>
+        </header>
+
+        <section class="layout-grid">
+        <section class="panel add-part-panel">
+            <div class="panel-header">
+                <h2>Add New Part</h2>
+            </div>
 
             <div class="form-grid">
-                <label>
-                    Part Number
-                    <input id="part_number" placeholder="Example: BRG-204">
-                </label>
-                <label>
-                    Description
-                    <input id="description" placeholder="Example: Motor bearing">
-                </label>
-                <label>
-                    Category
-                    <input id="category" placeholder="Example: Mechanical">
-                </label>
-                <label>
-                    Location
-                    <input id="location" placeholder="Example: Shelf A3">
-                </label>
-                <label>
-                    Min Stock
-                    <input id="min_stock" type="number" placeholder="2">
-                </label>
-                <label>
-                    Max Stock
-                    <input id="max_stock" type="number" placeholder="10">
-                </label>
-                <label>
-                    Current Stock
-                    <input id="current_stock" type="number" placeholder="5">
-                </label>
-
-                <button onclick="addPart()">Add Part</button>
+                <input id="part_number" placeholder="Part Number">
+                <input id="description" placeholder="Description">
+                <input id="category" placeholder="Category">
+                <input id="location" placeholder="Location">
+                <input id="min_stock" type="number" placeholder="Min Stock">
+                <input id="max_stock" type="number" placeholder="Max Stock">
+                <input id="current_stock" type="number" placeholder="Current Stock">
             </div>
+
+            <button class="cta" onclick="addPart()">Add Part</button>
         </section>
 
-        <section class="panel">
-            <div class="section-header">
+        <section class="panel list-panel">
+            <div class="panel-header">
                 <h2>Parts List</h2>
-                <div class="parts-tools">
-                    <input id="partSearch" class="search-input" placeholder="Search parts">
-                    <button class="secondary-button" onclick="searchParts()">Search</button>
-                    <button class="secondary-button" onclick="loadParts()">Refresh List</button>
-                </div>
+                <button class="ghost" onclick="loadParts()">Refresh</button>
             </div>
-
-            <ul id="partsList" class="list"></ul>
+            <div class="parts-search">
+                <select id="partsSearchType" aria-label="Select parts search type">
+                    <option value="">Select Search Type</option>
+                    <option value="location">Location</option>
+                    <option value="part_number">Part Number</option>
+                    <option value="low_stock">Low Stock</option>
+                </select>
+                <input id="partsSearchInput" class="hidden" placeholder="Type search and press Enter">
+            </div>
+            <ul id="partsList" class="data-list"></ul>
         </section>
-    </div>
 
-    <section class="panel history-panel">
-        <div class="section-header">
-            <h2>Transaction History</h2>
-            <button class="secondary-button" onclick="loadTransactions()">Load History</button>
-        </div>
-
-        <ul id="transactionList" class="list"></ul>
+        <section class="panel list-panel">
+            <div class="panel-header">
+                <h2>Transaction History</h2>
+                <button class="ghost" onclick="loadTransactions()">Load History</button>
+            </div>
+            <ul id="transactionList" class="data-list"></ul>
+        </section>
+        </section>
     </section>
 </main>
 
-<script>
-function addPart() {
-    fetch("/parts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            part_number: document.getElementById("part_number").value,
-            description: document.getElementById("description").value,
-            category: document.getElementById("category").value,
-            location: document.getElementById("location").value,
-            min_stock: parseInt(document.getElementById("min_stock").value),
-            max_stock: parseInt(document.getElementById("max_stock").value),
-            current_stock: parseInt(document.getElementById("current_stock").value)
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        loadParts();
-    });
-}
+<div id="confirmOverlay" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="confirmMessage">
+    <div class="modal-card">
+        <p id="confirmMessage">you are about to erase this part and its information, proceed?</p>
+        <div class="modal-actions">
+            <button id="confirmYes" class="danger">Yes</button>
+            <button id="confirmCancel" class="ghost">Cancel</button>
+        </div>
+    </div>
+</div>
 
-function loadParts() {
-    fetch("/parts")
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("partSearch").value = "";
-        renderParts(data, "No parts have been added yet.");
-    });
-}
-
-function searchParts() {
-    let searchText = document.getElementById("partSearch").value.trim().toLowerCase();
-
-    fetch("/parts")
-    .then(res => res.json())
-    .then(data => {
-        if (!searchText) {
-            renderParts(data, "No parts have been added yet.");
-            return;
-        }
-
-        let filteredParts = data.filter(part => {
-            let partNumber = String(part[1]).toLowerCase();
-            let description = String(part[2]).toLowerCase();
-            let category = String(part[3]).toLowerCase();
-
-            return partNumber.includes(searchText) ||
-                description.includes(searchText) ||
-                category.includes(searchText);
-        });
-
-        renderParts(filteredParts, "No matching parts found.");
-    });
-}
-
-function escapeHtml(value) {
-    return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
-
-function renderParts(parts, emptyMessage) {
-    let list = document.getElementById("partsList");
-    list.innerHTML = "";
-
-    if (parts.length === 0) {
-        list.innerHTML = `<li class="empty-state">${emptyMessage}</li>`;
-        return;
-    }
-
-    parts.forEach(part => {
-        let item = document.createElement("li");
-
-        let currentStock = part[7];
-        let minStock = part[5];
-        let isLow = currentStock < minStock;
-        let partNumber = escapeHtml(part[1]);
-        let description = escapeHtml(part[2]);
-        let category = escapeHtml(part[3]);
-        let location = escapeHtml(part[4]);
-        let maxStock = part[6];
-
-        item.className = "part-card" + (isLow ? " low-stock" : "");
-
-        item.innerHTML = `
-            <div class="part-title">
-                <span class="part-number">${partNumber}</span>
-                <span class="badge ${isLow ? "low" : ""}">${isLow ? "LOW STOCK" : "IN STOCK"}</span>
-            </div>
-            <div class="part-details">
-                ${description} | Category: ${category} | Location: ${location}<br>
-                Stock: ${currentStock} | Min: ${minStock} | Max: ${maxStock}
-            </div>
-            <div class="stock-actions">
-                <label>
-                    Qty
-                    <input class="qty-input" type="number" id="qty-${part[0]}" value="1" min="1">
-                </label>
-                <button class="danger-button" onclick="issuePart(${part[0]})">Issue</button>
-                <button onclick="receivePart(${part[0]})">Receive</button>
-                <button class="light-button" onclick="showEditPart(${part[0]})">Edit Part</button>
-            </div>
-            <div class="edit-form" id="edit-form-${part[0]}">
-                <div class="edit-grid">
-                    <label>
-                        Part Number
-                        <input id="edit-part-number-${part[0]}" value="${partNumber}">
-                    </label>
-                    <label>
-                        Description
-                        <input id="edit-description-${part[0]}" value="${description}">
-                    </label>
-                    <label>
-                        Category
-                        <input id="edit-category-${part[0]}" value="${category}">
-                    </label>
-                    <label>
-                        Location
-                        <input id="edit-location-${part[0]}" value="${location}">
-                    </label>
-                    <label>
-                        Min Stock
-                        <input id="edit-min-stock-${part[0]}" type="number" value="${minStock}">
-                    </label>
-                    <label>
-                        Max Stock
-                        <input id="edit-max-stock-${part[0]}" type="number" value="${maxStock}">
-                    </label>
-                </div>
-                <div class="button-row">
-                    <button onclick="savePartEdit(${part[0]})">Save Changes</button>
-                    <button class="light-button" onclick="cancelPartEdit(${part[0]})">Cancel</button>
-                </div>
-            </div>
-        `;
-
-        list.appendChild(item);
-    });
-}
-
-function showEditPart(partId) {
-    document.getElementById(`edit-form-${partId}`).classList.add("active");
-}
-
-function cancelPartEdit(partId) {
-    document.getElementById(`edit-form-${partId}`).classList.remove("active");
-}
-
-function savePartEdit(partId) {
-    fetch(`/parts/${partId}`, {
-        method: "PUT",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            part_number: document.getElementById(`edit-part-number-${partId}`).value,
-            description: document.getElementById(`edit-description-${partId}`).value,
-            category: document.getElementById(`edit-category-${partId}`).value,
-            location: document.getElementById(`edit-location-${partId}`).value,
-            min_stock: parseInt(document.getElementById(`edit-min-stock-${partId}`).value),
-            max_stock: parseInt(document.getElementById(`edit-max-stock-${partId}`).value)
-        })
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(err => { throw err; });
-        }
-        return res.json();
-    })
-    .then(data => {
-        alert(data.message);
-        refreshVisibleParts();
-    })
-    .catch(err => {
-        alert(err.message);
-    });
-}
-
-function refreshVisibleParts() {
-    if (document.getElementById("partSearch").value.trim()) {
-        searchParts();
-    } else {
-        loadParts();
-    }
-}
-
-function issuePart(partId) {
-    let qty = parseInt(document.getElementById(`qty-${partId}`).value);
-    updateStock(partId, -qty);
-}
-
-function receivePart(partId) {
-    let qty = parseInt(document.getElementById(`qty-${partId}`).value);
-    updateStock(partId, qty);
-}
-
-function updateStock(partId, change) {
-    fetch("/update_stock", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-            part_id: partId,
-            change: change
-        })
-    })
-    .then(res => {
-        if (!res.ok) {
-            return res.json().then(err => { throw err; });
-        }
-        return res.json();
-    })
-    .then(data => {
-        alert(data.message);
-        loadParts();
-    })
-    .catch(err => {
-        alert(err.message);
-    });
-}
-
-function loadTransactions() {
-    fetch("/transactions")
-    .then(res => res.json())
-    .then(data => {
-        let list = document.getElementById("transactionList");
-        list.innerHTML = "";
-
-        if (data.length === 0) {
-            list.innerHTML = '<li class="empty-state">No transactions have been recorded yet.</li>';
-            return;
-        }
-
-        data.forEach(tx => {
-            let item = document.createElement("li");
-            item.className = "transaction-card";
-
-            item.textContent =
-                "Part: " + tx[1] +
-                " | Type: " + tx[2] +
-                " | Qty: " + tx[3] +
-                " | User: " + tx[4] +
-                " | Date: " + tx[5];
-
-            list.appendChild(item);
-        });
-    });
-}
-
-window.onload = loadParts;
-
-function login() {
-    let username = document.getElementById("username").value.trim();
-
-    if (!username) {
-        alert("Please enter your name.");
-        return;
-    }
-
-    fetch("/login", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({username: username})
-    })
-    .then(res => res.json())
-    .then(data => {
-        alert(data.message);
-        document.getElementById("currentUser").innerText = "Logged in as: " + username;
-    });
-}
-</script>
+<!-- ================= JAVASCRIPT ================= -->
+<script src="{{ url_for('static', filename='app.js') }}"></script>
 
 </body>
 </html>
